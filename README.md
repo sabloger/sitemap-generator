@@ -77,7 +77,8 @@ func main() {
   - [x] Compress option
   - [x] Break the sitemap xml file in case of exceeding 
     the sitemaps.org limits (50,000 urls OR 50MB uncompressed file)
-  - [x] Ping search engines
+  - [x] Ping search engines for sitemap_index
+  - [ ] Ping search engines for single sitemap
   - [ ] Break the sitemap_index xml file in case of exceeding
     the sitemaps.org limits (50,000 urls OR 50MB uncompressed file)
 - [ ] Support: Additional content types:
