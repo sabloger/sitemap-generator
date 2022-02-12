@@ -159,11 +159,6 @@ func (s *Sitemap) SetOutputPath(outputPath string) {
 	}
 }
 
-// SetServerURI sets the ServerURI for Sitemap.
-func (s *Sitemap) SetServerURI(serverURI string) {
-	s.ServerURI = serverURI
-}
-
 // SetLastMod sets the LastMod if this Sitemap which will be used in it's URL in SitemapIndex
 func (s *Sitemap) SetLastMod(lastMod *time.Time) {
 	s.SitemapIndexLoc.LastMod = lastMod

@@ -20,12 +20,14 @@ import (
 // which wll be used for all URLs in SitemapIndex and it's Sitemaps.
 // SitemapLocs is list of location structs of its Sitemaps.
 // Sitemaps contains all Sitemaps which is belong to this SitemapIndex.
+// ServerURI is used for making url of Sitemap in SitemapIndex.
 type SitemapIndex struct {
 	Options
 	XMLName     xml.Name           `xml:"sitemapindex"`
 	Xmlns       string             `xml:"xmlns,attr"`
 	SitemapLocs []*SitemapIndexLoc `xml:"sitemap"`
 	Sitemaps    []*Sitemap         `xml:"-"`
+	ServerURI   string             `xml:"-"`
 	finalURL    string
 	mutex       sync.Mutex
 	wg          sync.WaitGroup
@@ -112,9 +114,6 @@ func (s *SitemapIndex) SetOutputPath(outputPath string) {
 // and sets it as OutputPath of new Sitemap entries built using NewSitemap method.
 func (s *SitemapIndex) SetServerURI(serverURI string) {
 	s.ServerURI = serverURI
-	for _, sitemap := range s.Sitemaps {
-		sitemap.SetServerURI(s.ServerURI)
-	}
 }
 
 // SetCompress sets the Compress option to be either enabled or disabled for SitemapIndex
