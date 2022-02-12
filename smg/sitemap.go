@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"github.com/jinzhu/copier"
 	"path/filepath"
 	"time"
 )
@@ -37,13 +36,13 @@ const (
 // a Linked-List pointing to the next Sitemap for large files.
 type Sitemap struct {
 	Options
-	SitemapLoc  *SitemapIndexLoc
-	NextSitemap *Sitemap `copier:"-"`
-	fileNum     int
-	urlsCount   int
-	content     bytes.Buffer  `copier:"-"`
-	tempBuf     *bytes.Buffer `copier:"-"`
-	xmlEncoder  *xml.Encoder  `copier:"-"`
+	SitemapIndexLoc *SitemapIndexLoc
+	NextSitemap     *Sitemap
+	fileNum         int
+	urlsCount       int
+	content         bytes.Buffer
+	tempBuf         *bytes.Buffer
+	xmlEncoder      *xml.Encoder
 }
 
 // NewSitemap builds and returns a new Sitemap.
@@ -51,7 +50,7 @@ func NewSitemap(prettyPrint bool) *Sitemap {
 	t := time.Now().UTC()
 
 	s := &Sitemap{
-		SitemapLoc: &SitemapIndexLoc{
+		SitemapIndexLoc: &SitemapIndexLoc{
 			LastMod: &t,
 		},
 	}
@@ -113,7 +112,10 @@ func (s *Sitemap) realAdd(u *SitemapLoc, locN int, locBytes []byte) error {
 // and connects to it via NextSitemap.
 func (s *Sitemap) buildNextSitemap() {
 	s.NextSitemap = NewSitemap(s.prettyPrint)
-	copier.Copy(s.NextSitemap, s)
+	s.NextSitemap.Compress = s.Compress
+	s.NextSitemap.Name = s.Name
+	s.NextSitemap.Hostname = s.Hostname
+	s.NextSitemap.OutputPath = s.OutputPath
 	s.NextSitemap.fileNum = s.fileNum + 1
 }
 
@@ -130,6 +132,9 @@ func (s *Sitemap) encodeToXML(loc *SitemapLoc) (int, []byte, error) {
 // It must be without ".xml" extension
 func (s *Sitemap) SetName(name string) {
 	s.Name = name
+	if s.NextSitemap != nil {
+		s.NextSitemap.SetName(name)
+	}
 }
 
 // SetHostname sets the Hostname of Sitemap urls which be prepended to all URLs.
@@ -138,6 +143,9 @@ func (s *Sitemap) SetName(name string) {
 // else the SitemapIndex.SetHostname does this action for all Sitemaps of the entire SitemapIndex.
 func (s *Sitemap) SetHostname(hostname string) {
 	s.Hostname = hostname
+	if s.NextSitemap != nil {
+		s.NextSitemap.SetHostname(hostname)
+	}
 }
 
 // SetOutputPath sets the OutputPath of Sitemap which will be used to save the xml file.
@@ -146,17 +154,26 @@ func (s *Sitemap) SetHostname(hostname string) {
 // else the SitemapIndex.SetOutputPath does this action for all Sitemaps of the entire SitemapIndex.
 func (s *Sitemap) SetOutputPath(outputPath string) {
 	s.OutputPath = outputPath
+	if s.NextSitemap != nil {
+		s.NextSitemap.SetOutputPath(outputPath)
+	}
 }
 
 // SetLastMod sets the LastMod if this Sitemap which will be used in it's URL in SitemapIndex
 func (s *Sitemap) SetLastMod(lastMod *time.Time) {
-	s.SitemapLoc.LastMod = lastMod
+	s.SitemapIndexLoc.LastMod = lastMod
+	if s.NextSitemap != nil {
+		s.NextSitemap.SetLastMod(lastMod)
+	}
 }
 
 // SetCompress sets the Compress option to be either enabled or disabled for Sitemap
 // When Compress is enabled, the output file is compressed using gzip with .xml.gz extension.
 func (s *Sitemap) SetCompress(compress bool) {
 	s.Compress = compress
+	if s.NextSitemap != nil {
+		s.NextSitemap.SetCompress(compress)
+	}
 }
 
 // Save makes the OutputPath in case of absence and saves the Sitemap into OutputPath using it's Name.

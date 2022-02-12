@@ -1,12 +1,21 @@
 sitemap-generator
 =================
 
-An awesome sitemap-generator Go package which is a comprehensive tool to create
+An awesome sitemap-generator Go module which is a comprehensive tool to create
 and manage sitemap_index and sitemap files in a beautiful way. :)
 
 Please see http://www.sitemaps.org/ for description of sitemap contents.
 
-### TODO list
+## Installation
+
+# How to Use sitemap-generator
+
+You can use the module in either Single-file sitemap or Multiple-files 
+sitemaps with a sitemap_index file.
+
+### Single sitemap usage
+
+## TODO list
 - [x] Develop: add new functionalities:
   - [x] Write the sitemap_index and sitemap files in xml format
   - [x] Compress option
@@ -26,7 +35,7 @@ Please see http://www.sitemaps.org/ for description of sitemap contents.
   - [ ] Write more test files.
 
 
-### LINKS
+## LINKS
 GoDoc documentation:
 https://godoc.org/github.com/sabloger/sitemap-generator
 
@@ -34,11 +43,11 @@ Git repository:
 https://github.com/sabloger/sitemap-generator
 
 
-### License
+## License
 MIT
 
 
-### THANKS
-Special thanks to authors of these repos whom I inspired from their sitemap packages to create this awesome package. :)
+## THANKS
+Special thanks to authors of these repos whom I inspired from their sitemap modules to create this awesome module. :)
 https://github.com/snabb/sitemap
 https://github.com/ikeikeikeike/go-sitemap-generator
