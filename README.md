@@ -71,6 +71,12 @@ func main() {
 </urlset>
 ```
 
+
+### SitemapIndex usage
+```go
+
+```
+
 ## TODO list
 - [x] Develop: add new functionalities:
   - [x] Write the sitemap_index and sitemap files in xml format

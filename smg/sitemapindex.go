@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -37,7 +36,6 @@ var (
 		"http://www.google.com/webmasters/tools/ping?sitemap=%s",
 		"http://www.bing.com/webmaster/ping.aspx?siteMap=%s",
 	}
-	dirSeparator = string(os.PathSeparator)
 )
 
 // NewSitemapIndex builds returns new SitemapIndex.
@@ -145,15 +143,15 @@ func (s *SitemapIndex) WriteTo(writer io.Writer) (int64, error) {
 
 // Save makes the OutputPath in case of absence and saves the SitemapIndex
 // and it's Sitemaps into OutputPath as separate files using their Name.
-func (s *SitemapIndex) Save() error {
+func (s *SitemapIndex) Save() (string, error) {
 	err := checkAndMakeDir(s.OutputPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = s.saveSitemaps()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var filename string
@@ -166,11 +164,11 @@ func (s *SitemapIndex) Save() error {
 	buf := bytes.Buffer{}
 	_, err = s.WriteTo(&buf)
 	if err != nil {
-		return err
+		return "", err
 	}
 	_, err = writeToFile(filename, s.OutputPath, s.Compress, buf.Bytes())
 	s.finalURL = filepath.Join(s.Hostname, s.OutputPath, filename)
-	return err
+	return filename, err
 }
 
 func (s *SitemapIndex) saveSitemaps() error {
