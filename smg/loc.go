@@ -1,11 +1,13 @@
 package smg
 
 import (
+	"encoding/xml"
 	"time"
 )
 
 //SitemapLoc todo
 type SitemapLoc struct {
+	XMLName    xml.Name   `xml:"url"`
 	Loc        string     `xml:"loc"`
 	LastMod    *time.Time `xml:"lastmod,omitempty"`
 	ChangeFreq ChangeFreq `xml:"changefreq,omitempty"`
@@ -14,11 +16,7 @@ type SitemapLoc struct {
 
 // SitemapIndexLoc todo
 type SitemapIndexLoc struct {
+	XMLName xml.Name   `xml:"url"`
 	Loc     string     `xml:"loc"`
 	LastMod *time.Time `xml:"lastmod,omitempty"`
 }
-
-//func (u *SitemapURL) toXMLBytes() []byte {
-//	buffer := bytes.Buffer{}
-//
-//}

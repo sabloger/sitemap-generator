@@ -1,10 +1,10 @@
 package smg
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"github.com/jinzhu/copier"
-	"io"
 	"path/filepath"
 	"time"
 )
@@ -22,115 +22,155 @@ const (
 	Yearly  ChangeFreq = "yearly"
 	Never   ChangeFreq = "never"
 
-	FileExt      string = ".xml"
-	FileGzExt    string = ".xml.gz"
-	MaxFileSize  int64  = 52428800
-	MaxURLsCount int    = 50000
+	FileExt           string = ".xml"
+	FileGzExt         string = ".xml.gz"
+	MaxFileSize       int    = 52428800
+	MaxURLsCount      int    = 50000
+	XMLUrlsetOpenTag  string = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`
+	XMLUrlsetCloseTag string = "</urlset>\n"
 )
 
 // Sitemap todo
 type Sitemap struct {
-	XMLName     xml.Name         `xml:"urlset"`
-	Xmlns       string           `xml:"xmlns,attr"`
-	Locs        []*SitemapLoc    `xml:"url" copier:"-"`
-	PrettyPrint bool             `xml:"-"`
-	Compress    bool             `xml:"-"`
-	Name        string           `xml:"-"`
-	Hostname    string           `xml:"-"`
-	OutputPath  string           `xml:"-"`
-	SitemapLoc  *SitemapIndexLoc `xml:"-"`
-	NextSitemap *Sitemap         `xml:"-" copier:"-"`
+	//Locs        []*SitemapLoc `copier:"-"`
+	Compress    bool
+	Name        string
+	Hostname    string
+	OutputPath  string
+	SitemapLoc  *SitemapIndexLoc
+	NextSitemap *Sitemap `copier:"-"`
+	prettyPrint bool
 	fileNum     int
-	content     []byte
+	urlsCount   int
+	content     bytes.Buffer  `copier:"-"`
+	tempBuf     *bytes.Buffer `copier:"-"`
+	xmlEncoder  *xml.Encoder  `copier:"-"`
 }
 
 // NewSitemap returns a new Sitemap.
-func NewSitemap() *Sitemap {
+func NewSitemap(prettyPrint bool) *Sitemap {
 	t := time.Now().UTC()
 
+	buf := bytes.Buffer{}
+	buf.Write([]byte(xml.Header))
+	buf.Write([]byte(XMLUrlsetOpenTag))
+	if prettyPrint {
+		buf.Write([]byte{'\n'})
+	}
+	tempBuf := &bytes.Buffer{}
+	encoder := xml.NewEncoder(tempBuf)
+	if prettyPrint {
+		encoder.Indent("", "  ")
+	}
 	return &Sitemap{
-		Xmlns:    "http://www.sitemaps.org/schemas/sitemap/0.9",
-		Locs:     make([]*SitemapLoc, 0),
+		//Locs:     make([]*SitemapLoc, 0),
 		Compress: true,
 		SitemapLoc: &SitemapIndexLoc{
 			LastMod: &t,
 		},
+		content:     buf,
+		tempBuf:     tempBuf,
+		xmlEncoder:  encoder,
+		prettyPrint: prettyPrint,
 	}
 }
 
 // Add adds an URL to a Sitemap.
 // in case of exceeding the Sitemaps.org limits, splits the Sitemap into several Sitemap instances using a Linked list
 func (s *Sitemap) Add(u *SitemapLoc) error {
+	return s.realAdd(u, 0, nil)
+}
+
+func (s *Sitemap) realAdd(u *SitemapLoc, locN int, locBytes []byte) error {
+
 	if s.NextSitemap != nil {
-		s.NextSitemap.Add(u)
+		s.NextSitemap.realAdd(u, locN, locBytes)
 		return nil
 	}
 
-	if len(s.Locs) >= MaxURLsCount {
+	if s.urlsCount >= MaxURLsCount {
 		s.buildNextSitemap()
-		s.NextSitemap.Add(u)
-		return nil
+		return s.NextSitemap.realAdd(u, locN, locBytes)
 	}
 
-	s.Locs = append(s.Locs, u)
+	if locBytes == nil {
+		u.Loc = filepath.Join(s.Hostname, u.Loc)
+		var err error
+		locN, locBytes, err = s.encodeToXML(u)
+		if err != nil {
+			return err
+		}
+	}
+	//s.Locs = append(s.Locs, u)
 
-	if n, err := s.CountXMLBytes(); err == nil && n >= MaxFileSize {
-		s.Locs = s.Locs[:len(s.Locs)-1]
+	if locN+s.content.Len() >= MaxFileSize {
+		//s.Locs = s.Locs[:len(s.Locs)-1]
 		s.buildNextSitemap()
-		s.NextSitemap.Add(u)
-		return nil
-	} else if err != nil {
+		return s.NextSitemap.realAdd(u, locN, locBytes)
+	}
+
+	_, err := s.content.Write(locBytes)
+	if err != nil {
 		return err
 	}
-	u.Loc = filepath.Join(s.Hostname, u.Loc)
+	s.urlsCount++
 	return nil
 }
 
 // buildNextSitemap builds a new Sitemap instance based on current one and connects to it via NextSitemap
 func (s *Sitemap) buildNextSitemap() {
-	s.NextSitemap = NewSitemap()
+	s.NextSitemap = NewSitemap(s.prettyPrint)
 	copier.Copy(s.NextSitemap, s)
 	s.NextSitemap.fileNum = s.fileNum + 1
 }
 
-// CountXMLBytes counts the number of bytes after encoding the XML sitemap to be able to split large files.
-func (s *Sitemap) CountXMLBytes() (n int64, err error) {
-	nilWriter := &JustCounterWriter{}
-	_, err = nilWriter.Write([]byte(xml.Header))
-	if err != nil {
-		return 0, err
-	}
+//// CountXMLBytes counts the number of bytes after encoding the XML sitemap to be able to split large files.
+//func (s *Sitemap) CountXMLBytes() (n int64, err error) {
+//	nilWriter := &JustCounterWriter{}
+//	_, err = nilWriter.Write([]byte(xml.Header))
+//	if err != nil {
+//		return 0, err
+//	}
+//
+//	encoder := xml.NewEncoder(nilWriter)
+//	if s.prettyPrint {
+//		encoder.Indent("", "  ")
+//	}
+//	err = encoder.Encode(s)
+//	_, err = nilWriter.Write([]byte{'\n'})
+//	return nilWriter.Count(), err
+//}
+//
+//// WriteTo writes XML encoded sitemap to given io.Writer.
+//// Implements io.WriterTo interface.
+//func (s *Sitemap) WriteTo(writer io.Writer) (int64, error) {
+//	headerCount, err := writer.Write([]byte(xml.Header))
+//	if err != nil {
+//		return 0, err
+//	}
+//	en := xml.NewEncoder(writer)
+//	if s.prettyPrint {
+//		en.Indent("", "  ")
+//	}
+//	err = en.Encode(s)
+//	if err != nil {
+//		return 0, err
+//	}
+//
+//	bodyCount, err := writer.Write([]byte{'\n'})
+//	if err != nil {
+//		return 0, err
+//	}
+//	return int64(headerCount + bodyCount), err
+//}
 
-	en := xml.NewEncoder(nilWriter)
-	if s.PrettyPrint {
-		en.Indent("", "  ")
-	}
-	err = en.Encode(s)
-	_, err = nilWriter.Write([]byte{'\n'})
-	return nilWriter.Count(), err
-}
-
-// WriteTo writes XML encoded sitemap to given io.Writer.
-// Implements io.WriterTo interface.
-func (s *Sitemap) WriteTo(writer io.Writer) (int64, error) {
-	headerCount, err := writer.Write([]byte(xml.Header))
+func (s *Sitemap) encodeToXML(loc *SitemapLoc) (int, []byte, error) {
+	err := s.xmlEncoder.Encode(loc)
 	if err != nil {
-		return 0, err
+		return 0, nil, err
 	}
-	en := xml.NewEncoder(writer)
-	if s.PrettyPrint {
-		en.Indent("", "  ")
-	}
-	err = en.Encode(s)
-	if err != nil {
-		return 0, err
-	}
-
-	bodyCount, err := writer.Write([]byte{'\n'})
-	if err != nil {
-		return 0, err
-	}
-	return int64(headerCount + bodyCount), err
+	defer s.tempBuf.Reset()
+	return s.tempBuf.Len(), s.tempBuf.Bytes(), nil
 }
 
 // SetName sets the Name of Sitemap output xml file
@@ -169,9 +209,9 @@ func (s *Sitemap) SetCompress(compress bool) {
 // SetPrettyPrint sets the PrettyPrint option to be either enabled or disabled for
 // Sitemap. When PrettyPrint is enabled, the output file is easy to read and is
 // recommended to be set to false for production use.
-func (s *Sitemap) SetPrettyPrint(prettyPrint bool) {
-	s.PrettyPrint = prettyPrint
-}
+//func (s *Sitemap) SetPrettyPrint(prettyPrint bool) {
+//	s.PrettyPrint = prettyPrint
+//}
 
 // Save makes the OutputPath in case of absence and saves the Sitemap into OutputPath using it's Name.
 // it returns the filename.
@@ -195,7 +235,13 @@ func (s *Sitemap) Save() (filenames []string, err error) {
 		filename += FileExt
 	}
 
-	_, err = writeToFile(s, filename, s.OutputPath, s.Compress)
+	ending := bytes.Buffer{}
+	if s.prettyPrint {
+		ending.Write([]byte{'\n'})
+	}
+	ending.Write([]byte(XMLUrlsetCloseTag))
+
+	_, err = writeToFile(filename, s.OutputPath, s.Compress, s.content.Bytes(), ending.Bytes())
 
 	if s.NextSitemap != nil {
 		filenames, err = s.NextSitemap.Save()

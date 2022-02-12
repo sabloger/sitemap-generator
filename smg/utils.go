@@ -2,7 +2,6 @@ package smg
 
 import (
 	"compress/gzip"
-	"io"
 	"os"
 	"path/filepath"
 )
@@ -10,7 +9,7 @@ import (
 // checkAndMakeDir makes the path in case of absence of the OutputPath
 func checkAndMakeDir(path string) error {
 	if _, err := os.Stat(path); path != "" && os.IsNotExist(err) {
-		err := os.MkdirAll(path, 0666)
+		err := os.MkdirAll(path, 0764)
 		if err != nil {
 			return err
 		}
@@ -23,7 +22,7 @@ func checkAndMakeDir(path string) error {
 // filename param is a full filename with extension and path is the dir path.
 // compress defines whether the file must be gzip compressed or not.
 // returns n for number of written bytes and error in case of any problem.
-func writeToFile(writer io.WriterTo, filename, path string, compress bool) (int64, error) {
+func writeToFile(filename, path string, compress bool, content ...[]byte) (n int, err error) {
 	file, err := os.OpenFile(filepath.Join(path, filename), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
 		return 0, err
@@ -34,7 +33,22 @@ func writeToFile(writer io.WriterTo, filename, path string, compress bool) (int6
 		w := gzip.NewWriter(file)
 		defer w.Close()
 
-		return writer.WriteTo(w)
+		for _, bytes := range content {
+			tn, err := w.Write(bytes)
+			if err != nil {
+				return 0, err
+			}
+			n+=tn
+		}
+		return
 	}
-	return writer.WriteTo(file)
+
+	for _, bytes := range content {
+		tn, err := file.Write(bytes)
+		if err != nil {
+			return 0, err
+		}
+		n+=tn
+	}
+	return
 }

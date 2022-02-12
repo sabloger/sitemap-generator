@@ -1,6 +1,7 @@
 package smg
 
 import (
+	"bytes"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -24,13 +25,15 @@ type SitemapIndex struct {
 	XMLName     xml.Name           `xml:"sitemapindex"`
 	Xmlns       string             `xml:"xmlns,attr"`
 	SitemapLocs []*SitemapIndexLoc `xml:"sitemap"`
-	PrettyPrint bool               `xml:"-"`
 	Compress    bool               `xml:"-"`
 	Name        string             `xml:"-"`
 	Hostname    string             `xml:"-"`
 	OutputPath  string             `xml:"-"`
 	Sitemaps    []*Sitemap         `xml:"-"`
+	prettyPrint bool
 	finalURL    string
+	mutex       sync.Mutex
+	wg          sync.WaitGroup
 }
 
 var searchEnginePingURLs = []string{
@@ -39,19 +42,24 @@ var searchEnginePingURLs = []string{
 }
 
 // NewSitemapIndex returns new SitemapIndex.
-func NewSitemapIndex() *SitemapIndex {
+func NewSitemapIndex(prettyPrint bool) *SitemapIndex {
 	return &SitemapIndex{
 		Xmlns:       "http://www.sitemaps.org/schemas/sitemap/0.9",
 		SitemapLocs: make([]*SitemapIndexLoc, 0),
 		Name:        "sitemap",
 		Sitemaps:    make([]*Sitemap, 0),
 		Compress:    true,
+		prettyPrint: prettyPrint,
+		mutex:       sync.Mutex{},
+		wg:          sync.WaitGroup{},
 	}
 }
 
 // Add adds an URL to a SitemapIndex.
 func (s *SitemapIndex) Add(u *SitemapIndexLoc) {
+	s.mutex.Lock()
 	s.SitemapLocs = append(s.SitemapLocs, u)
+	s.mutex.Unlock()
 }
 
 // SetSitemapIndexName sets the filename of SitemapIndex which be used to save the xml file.
@@ -63,7 +71,7 @@ func (s *SitemapIndex) SetSitemapIndexName(name string) {
 // NewSitemap builds a new instance of Sitemap and appends it in SitemapIndex's Sitemaps
 // and sets it's Name nad Hostname
 func (s *SitemapIndex) NewSitemap() *Sitemap {
-	sm := NewSitemap()
+	sm := NewSitemap(s.prettyPrint)
 	s.Sitemaps = append(s.Sitemaps, sm)
 
 	fileNum := len(s.Sitemaps)
@@ -71,7 +79,6 @@ func (s *SitemapIndex) NewSitemap() *Sitemap {
 	sm.SetHostname(s.Hostname)
 	sm.SetOutputPath(s.OutputPath)
 	sm.SetCompress(s.Compress)
-	sm.SetPrettyPrint(s.PrettyPrint)
 	return sm
 }
 
@@ -114,12 +121,12 @@ func (s *SitemapIndex) SetCompress(compress bool) {
 // SitemapIndex and it's Sitemaps and sets it as PrettyPrint of new Sitemap entries
 // built using NewSitemap method. When PrettyPrint is enabled, the output file is easy
 // to read and is recommended to be set to false for production use.
-func (s *SitemapIndex) SetPrettyPrint(prettyPrint bool) {
-	s.PrettyPrint = prettyPrint
-	for _, sitemap := range s.Sitemaps {
-		sitemap.SetPrettyPrint(s.PrettyPrint)
-	}
-}
+//func (s *SitemapIndex) SetPrettyPrint(prettyPrint bool) {
+//	s.PrettyPrint = prettyPrint
+//	for _, sitemap := range s.Sitemaps {
+//		sitemap.SetPrettyPrint(s.PrettyPrint)
+//	}
+//}
 
 // WriteTo writes XML encoded sitemap to given io.Writer.
 // Implements io.WriterTo interface.
@@ -129,7 +136,7 @@ func (s *SitemapIndex) WriteTo(writer io.Writer) (int64, error) {
 		return 0, err
 	}
 	encoder := xml.NewEncoder(writer)
-	if s.PrettyPrint {
+	if s.prettyPrint {
 		encoder.Indent("", "  ")
 	}
 	err = encoder.Encode(s)
@@ -163,22 +170,34 @@ func (s *SitemapIndex) Save() error {
 	} else {
 		filename = s.Name + FileExt
 	}
-	_, err = writeToFile(s, filename, s.OutputPath, s.Compress)
+
+	buf := bytes.Buffer{}
+	_, err = s.WriteTo(&buf)
+	if err != nil {
+		return err
+	}
+	_, err = writeToFile(filename, s.OutputPath, s.Compress, buf.Bytes())
 	s.finalURL = filepath.Join(s.Hostname, s.OutputPath, filename)
 	return err
 }
 
 func (s *SitemapIndex) saveSitemaps() error {
-	for _, sm := range s.Sitemaps {
-		smFilenames, err := sm.Save()
-		if err != nil {
-			return err
-		}
-		for _, smFilename := range smFilenames {
-			sm.SitemapLoc.Loc = filepath.Join(s.Hostname, s.OutputPath, smFilename)
-			s.Add(sm.SitemapLoc)
-		}
+	for _, sitemap := range s.Sitemaps {
+		s.wg.Add(1)
+		go func(sm *Sitemap) {
+			smFilenames, err := sm.Save()
+			if err != nil {
+				log.Println("Error while saving this sitemap:", sm.Name)
+				return
+			}
+			for _, smFilename := range smFilenames {
+				sm.SitemapLoc.Loc = filepath.Join(s.Hostname, s.OutputPath, smFilename)
+				s.Add(sm.SitemapLoc)
+			}
+			s.wg.Done()
+		}(sitemap)
 	}
+	s.wg.Wait()
 	return nil
 }
 
