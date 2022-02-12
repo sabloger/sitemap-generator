@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 )
@@ -105,9 +104,6 @@ func (s *SitemapIndex) SetHostname(hostname string) {
 // and sets it as OutputPath of new Sitemap entries built using NewSitemap method.
 // this path can be a multi-level dir path and will be used in Save method.
 func (s *SitemapIndex) SetOutputPath(outputPath string) {
-	if strings.Index(outputPath, dirSeparator) == 0 {
-		outputPath = strings.Replace(outputPath, dirSeparator, "", 1)
-	}
 	s.OutputPath = outputPath
 	for _, sitemap := range s.Sitemaps {
 		sitemap.SetOutputPath(s.OutputPath)

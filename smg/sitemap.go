@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -154,9 +153,6 @@ func (s *Sitemap) SetHostname(hostname string) {
 // but you can set a separate OutputPath for a specific Sitemap using SetOutputPath,
 // else the SitemapIndex.SetOutputPath does this action for all Sitemaps of the entire SitemapIndex.
 func (s *Sitemap) SetOutputPath(outputPath string) {
-	if strings.Index(outputPath, dirSeparator) == 0 {
-		outputPath = strings.Replace(outputPath, dirSeparator, "", 1)
-	}
 	s.OutputPath = outputPath
 	if s.NextSitemap != nil {
 		s.NextSitemap.SetOutputPath(outputPath)
