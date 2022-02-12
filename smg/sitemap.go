@@ -25,7 +25,7 @@ const (
 const (
 	fileExt           string = ".xml"
 	fileGzExt         string = ".xml.gz"
-	maxFileSize       int    = 52428800
+	maxFileSize       int    = 52428000 // decreased 800 byte to prevent a small bug to fail a big program :)
 	maxURLsCount      int    = 50000
 	xmlUrlsetOpenTag  string = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`
 	xmlUrlsetCloseTag string = "</urlset>\n"
@@ -174,6 +174,11 @@ func (s *Sitemap) SetCompress(compress bool) {
 	if s.NextSitemap != nil {
 		s.NextSitemap.SetCompress(compress)
 	}
+}
+
+// GetURLsCount returns the number of added URL items into this single sitemap.
+func (s *Sitemap) GetURLsCount() int {
+	return s.urlsCount
 }
 
 // Save makes the OutputPath in case of absence and saves the Sitemap into OutputPath using it's Name.
