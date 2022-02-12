@@ -33,7 +33,7 @@ func main() {
   sm := smg.NewSitemap(true) // The argument is PrettyPrint which must be set on initializing
   sm.SetName("single_sitemap")
   sm.SetHostname("https://www.example.com")
-  sm.SetOutputPath("/some/path")
+  sm.SetOutputPath("./some/path")
   sm.SetLastMod(&now)
   sm.SetCompress(false)
 
