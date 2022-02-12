@@ -108,6 +108,15 @@ func (s *SitemapIndex) SetOutputPath(outputPath string) {
 	}
 }
 
+// SetServerURI sets the ServerURI for SitemapIndex and it's Sitemaps
+// and sets it as OutputPath of new Sitemap entries built using NewSitemap method.
+func (s *SitemapIndex) SetServerURI(serverURI string) {
+	s.ServerURI = serverURI
+	for _, sitemap := range s.Sitemaps {
+		sitemap.SetServerURI(s.ServerURI)
+	}
+}
+
 // SetCompress sets the Compress option to be either enabled or disabled for SitemapIndex
 // and it's Sitemaps and sets it as Compress of new Sitemap entries built using NewSitemap method.
 // When Compress is enabled, the output file is compressed using gzip with .xml.gz extension.
@@ -181,7 +190,7 @@ func (s *SitemapIndex) saveSitemaps() error {
 				return
 			}
 			for _, smFilename := range smFilenames {
-				sm.SitemapIndexLoc.Loc = filepath.Join(s.Hostname, s.OutputPath, smFilename)
+				sm.SitemapIndexLoc.Loc = filepath.Join(s.Hostname, s.ServerURI, smFilename)
 				s.Add(sm.SitemapIndexLoc)
 			}
 			s.wg.Done()
