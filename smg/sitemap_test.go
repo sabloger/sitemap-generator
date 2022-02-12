@@ -16,6 +16,7 @@ func TestSingleSitemap(t *testing.T) {
 	sm.SetHostname(baseURL)
 	sm.SetOutputPath(path)
 	sm.SetLastMod(&now)
+	sm.SetCompress(false)
 
 	for _, route := range routes {
 		err := sm.Add(&SitemapLoc{
