@@ -58,7 +58,7 @@ func main() {
   }
 }
 ```
-`single_sitemap.xml` will look:
+`single_sitemap.xml` will look like:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -74,7 +74,78 @@ func main() {
 
 ### SitemapIndex usage
 ```go
+package main
 
+import (
+  "fmt"
+  "github.com/sabloger/sitemap-generator/smg"
+  "log"
+  "time"
+)
+
+func main() {
+  now := time.Now().UTC()
+
+  smi := smg.NewSitemapIndex(true)
+  smi.SetCompress(false)
+  smi.SetSitemapIndexName("an_optional_name_for_sitemap_index")
+  smi.SetHostname("https://www.example.com")
+  smi.SetOutputPath("./sitemap_index_example/")
+  smi.SetServerURI("/sitemaps/") // Optional
+
+  smBlog := smi.NewSitemap()
+  smBlog.SetName("blog_sitemap")
+  smBlog.SetLastMod(&now)
+  err := smBlog.Add(&smg.SitemapLoc{
+    Loc:        "blog/post/1231",
+    LastMod:    &now,
+    ChangeFreq: smg.Weekly,
+    Priority:   0.8,
+  })
+  if err != nil {
+    log.Fatal("Unable to add SitemapLoc:", err)
+  }
+
+  smNews := smi.NewSitemap()
+  smNews.SetLastMod(&now)
+  err = smNews.Add(&smg.SitemapLoc{
+    Loc:        "news/2021-01-05/a-news-page",
+    LastMod:    &now,
+    ChangeFreq: smg.Weekly,
+    Priority:   1,
+  })
+  if err != nil {
+    log.Fatal("Unable to add SitemapLoc:", err)
+  }
+
+  filename, err := smi.Save()
+  if err != nil {
+    log.Fatal("Unable to Save Sitemap:", err)
+  }
+
+  fmt.Println("sitemap_index file:", filename)
+}
+```
+the output directory will be like this:
+```
+sitemap_index_example
+├── an_optional_name_for_sitemap_index.xml
+├── blog_sitemap.xml
+└── sitemap2.xml
+```
+`an_optional_name_for_sitemap_index.xml` will look like:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https:/www.example.com/sitemaps/blog_sitemap.xml</loc>
+    <lastmod>2022-02-12T18:38:06.671183Z</lastmod>
+  </url>
+  <url>
+    <loc>https:/www.example.com/sitemaps/sitemap2.xml</loc>
+    <lastmod>2022-02-12T18:38:06.671183Z</lastmod>
+  </url>
+</sitemapindex>
 ```
 
 ## TODO list
@@ -83,7 +154,7 @@ func main() {
   - [x] Compress option
   - [x] Break the sitemap xml file in case of exceeding 
     the sitemaps.org limits (50,000 urls OR 50MB uncompressed file)
-  - [ ] Ability to set Sitemap uri on server to set on it's url
+  - [x] Ability to set Sitemap uri on server to set on it's url
     in sitemap_index file
   - [x] Ping search engines for sitemap_index
   - [ ] Ping search engines for single sitemap
