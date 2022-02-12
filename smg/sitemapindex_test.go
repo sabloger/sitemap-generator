@@ -19,28 +19,6 @@ var (
 	lenLetters = len(letterBytes)
 )
 
-func buildRoutes(n, l, s int) []string {
-	rand.Seed(time.Now().UnixNano())
-
-	routes := make([]string, n)
-	for i := range routes {
-		routes[i] = randString(rand.Intn(l) + s)
-	}
-	return routes
-}
-
-func randString(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(lenLetters)]
-	}
-	return string(b)
-}
-
-func getNewPath() string {
-	return fmt.Sprintf("/tmp/sitemap_output_%d", rand.Intn(900)+100)
-}
-
 // TestCompleteAction tests the whole sitemap-generator module with a semi-basic usage
 func TestCompleteAction(t *testing.T) {
 	routes := buildRoutes(10, 40, 10)
@@ -222,4 +200,26 @@ func removeTmpFiles(t *testing.T, path string) {
 	if err != nil {
 		t.Fatal("Unable to remove tmp path after testing:", err)
 	}
+}
+
+func buildRoutes(n, l, s int) []string {
+	rand.Seed(time.Now().UnixNano())
+
+	routes := make([]string, n)
+	for i := range routes {
+		routes[i] = randString(rand.Intn(l) + s)
+	}
+	return routes
+}
+
+func randString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(lenLetters)]
+	}
+	return string(b)
+}
+
+func getNewPath() string {
+	return fmt.Sprintf("/tmp/sitemap_output_%d", rand.Intn(900)+100)
 }

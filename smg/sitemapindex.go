@@ -8,7 +8,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -31,10 +33,13 @@ type SitemapIndex struct {
 	wg          sync.WaitGroup
 }
 
-var searchEnginePingURLs = []string{
-	"http://www.google.com/webmasters/tools/ping?sitemap=%s",
-	"http://www.bing.com/webmaster/ping.aspx?siteMap=%s",
-}
+var (
+	searchEnginePingURLs = []string{
+		"http://www.google.com/webmasters/tools/ping?sitemap=%s",
+		"http://www.bing.com/webmaster/ping.aspx?siteMap=%s",
+	}
+	dirSeparator = string(os.PathSeparator)
+)
 
 // NewSitemapIndex builds returns new SitemapIndex.
 // prettyPrint param makes the file easy to read and is
@@ -100,6 +105,9 @@ func (s *SitemapIndex) SetHostname(hostname string) {
 // and sets it as OutputPath of new Sitemap entries built using NewSitemap method.
 // this path can be a multi-level dir path and will be used in Save method.
 func (s *SitemapIndex) SetOutputPath(outputPath string) {
+	if strings.Index(outputPath, dirSeparator) == 0 {
+		outputPath = strings.Replace(outputPath, dirSeparator, "", 1)
+	}
 	s.OutputPath = outputPath
 	for _, sitemap := range s.Sitemaps {
 		sitemap.SetOutputPath(s.OutputPath)
