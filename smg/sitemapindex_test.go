@@ -46,7 +46,7 @@ func TestCompleteAction(t *testing.T) {
 	smi := NewSitemapIndex(true)
 	smi.SetCompress(false)
 	smi.SetHostname(baseURL)
-	smi.SetSitemapIndexName("bomt_sitemap")
+	smi.SetSitemapIndexName("test_sitemap_index")
 	smi.SetOutputPath(path)
 	now := time.Now().UTC()
 
@@ -55,6 +55,7 @@ func TestCompleteAction(t *testing.T) {
 	for _, name := range a {
 		sm := smi.NewSitemap()
 		sm.SetName(name)
+		sm.SetLastMod(&now)
 		for _, route := range routes {
 			err := sm.Add(&SitemapLoc{
 				Loc:        route,
@@ -92,9 +93,24 @@ func TestCompleteAction(t *testing.T) {
 		t.Fatal("Unable to Ping search engines:", err)
 	}
 
+	smi.SetCompress(true)
+	err = smi.Save()
+	if err != nil {
+		t.Fatal("Unable to Save Compressed SitemapIndex:", err)
+	}
+
 	// Checking 5 named output files
 	for _, name := range a {
-		f, err := os.Stat(filepath.Join(path, name+".xml"))
+		// Compressed files;
+		f, err := os.Stat(filepath.Join(path, name+fileGzExt))
+		if os.IsNotExist(err) || f.IsDir() {
+			t.Fatal("Final file does not exist or is directory:", name, err)
+		}
+		if f.Size() == 0 {
+			t.Fatal("Final file has zero size:", name)
+		}
+		// Plain files:
+		f, err = os.Stat(filepath.Join(path, name+fileExt))
 		if os.IsNotExist(err) || f.IsDir() {
 			t.Fatal("Final file does not exist or is directory:", name, err)
 		}
@@ -103,13 +119,38 @@ func TestCompleteAction(t *testing.T) {
 		}
 	}
 
-	// Checking the 6th sitemap which was no-name
-	f, err := os.Stat(filepath.Join(path, "sitemap6.xml"))
+	// Checking the 6th sitemap which was no-name, compressed file:
+	f, err := os.Stat(filepath.Join(path, "sitemap6"+fileGzExt))
 	if os.IsNotExist(err) || f.IsDir() {
 		t.Fatal("Final 6th file does not exist or is directory:", err)
 	}
 	if f.Size() == 0 {
 		t.Fatal("Final 6th file has zero size")
+	}
+	// Plain file:
+	f, err = os.Stat(filepath.Join(path, "sitemap6"+fileExt))
+	if os.IsNotExist(err) || f.IsDir() {
+		t.Fatal("Final 6th file does not exist or is directory:", err)
+	}
+	if f.Size() == 0 {
+		t.Fatal("Final 6th file has zero size")
+	}
+
+	// Checking the sitemap_index file, compressed file:
+	f, err = os.Stat(filepath.Join(path, "test_sitemap_index"+fileGzExt))
+	if os.IsNotExist(err) || f.IsDir() {
+		t.Fatal("Final test_sitemap_index file does not exist or is directory:", err)
+	}
+	if f.Size() == 0 {
+		t.Fatal("Final test_sitemap_index file has zero size")
+	}
+	// Plain file:
+	f, err = os.Stat(filepath.Join(path, "test_sitemap_index"+fileExt))
+	if os.IsNotExist(err) || f.IsDir() {
+		t.Fatal("Final test_sitemap_index file does not exist or is directory:", err)
+	}
+	if f.Size() == 0 {
+		t.Fatal("Final test_sitemap_index file has zero size")
 	}
 
 	// Removing the generated path and files

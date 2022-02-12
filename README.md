@@ -20,7 +20,10 @@ Please see http://www.sitemaps.org/ for description of sitemap contents.
   - [ ] Image sitemaps
   - [ ] News sitemaps
   - [ ] Alternate Links
-- [ ] Increase test coverage
+- [ ] Module Stability:
+  - [x] Increase test coverage to more than %80.
+  current coverage is: 80.6% of statements
+  - [ ] Write more test files.
 
 
 ### LINKS
