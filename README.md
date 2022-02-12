@@ -20,7 +20,7 @@ Please see http://www.sitemaps.org/ for description of sitemap contents.
   - [ ] Image sitemaps
   - [ ] News sitemaps
   - [ ] Alternate Links
-- [ ] Writing tests
+- [ ] Increase test coverage
 
 
 ### LINKS

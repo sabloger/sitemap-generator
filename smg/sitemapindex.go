@@ -15,22 +15,17 @@ import (
 
 // SitemapIndex contains sitemap_index items which are SitemapURLs.
 // New instances must be created with NewSitemapIndex() in order to set the
-// xmlns attribute correctly. PrettyPrint makes the file easy to read and is
-// recommended to be set to false for production use. Name is the filename
-// which be used in Save method. Hostname is a prefix which wll be used for
-// all URLs in SitemapIndex and it's Sitemaps. OutputPath is the dir path to
-// save the SitemapIndex file and it's Sitemaps. Sitemaps contains all Sitemaps
-// which is belong to this SitemapIndex.
+// Xmlns attribute correctly. Options is for general attributes
+// Name is the filename which is used in Save method. Hostname is a prefix
+// which wll be used for all URLs in SitemapIndex and it's Sitemaps.
+// SitemapLocs is list of location structs of its Sitemaps.
+// Sitemaps contains all Sitemaps which is belong to this SitemapIndex.
 type SitemapIndex struct {
+	Options
 	XMLName     xml.Name           `xml:"sitemapindex"`
 	Xmlns       string             `xml:"xmlns,attr"`
 	SitemapLocs []*SitemapIndexLoc `xml:"sitemap"`
-	Compress    bool               `xml:"-"`
-	Name        string             `xml:"-"`
-	Hostname    string             `xml:"-"`
-	OutputPath  string             `xml:"-"`
 	Sitemaps    []*Sitemap         `xml:"-"`
-	prettyPrint bool
 	finalURL    string
 	mutex       sync.Mutex
 	wg          sync.WaitGroup
@@ -41,18 +36,22 @@ var searchEnginePingURLs = []string{
 	"http://www.bing.com/webmaster/ping.aspx?siteMap=%s",
 }
 
-// NewSitemapIndex returns new SitemapIndex.
+// NewSitemapIndex builds returns new SitemapIndex.
+// prettyPrint param makes the file easy to read and is
+// recommended to be set to false for production use and
+// is not changeable after initialization.
 func NewSitemapIndex(prettyPrint bool) *SitemapIndex {
-	return &SitemapIndex{
+	s := &SitemapIndex{
 		Xmlns:       "http://www.sitemaps.org/schemas/sitemap/0.9",
 		SitemapLocs: make([]*SitemapIndexLoc, 0),
-		Name:        "sitemap",
 		Sitemaps:    make([]*Sitemap, 0),
-		Compress:    true,
-		prettyPrint: prettyPrint,
 		mutex:       sync.Mutex{},
 		wg:          sync.WaitGroup{},
 	}
+	s.Name = "sitemap"
+	s.Compress = true
+	s.prettyPrint = prettyPrint
+	return s
 }
 
 // Add adds an URL to a SitemapIndex.
@@ -117,17 +116,6 @@ func (s *SitemapIndex) SetCompress(compress bool) {
 	}
 }
 
-// SetPrettyPrint sets the PrettyPrint option to be either enabled or disabled for
-// SitemapIndex and it's Sitemaps and sets it as PrettyPrint of new Sitemap entries
-// built using NewSitemap method. When PrettyPrint is enabled, the output file is easy
-// to read and is recommended to be set to false for production use.
-//func (s *SitemapIndex) SetPrettyPrint(prettyPrint bool) {
-//	s.PrettyPrint = prettyPrint
-//	for _, sitemap := range s.Sitemaps {
-//		sitemap.SetPrettyPrint(s.PrettyPrint)
-//	}
-//}
-
 // WriteTo writes XML encoded sitemap to given io.Writer.
 // Implements io.WriterTo interface.
 func (s *SitemapIndex) WriteTo(writer io.Writer) (int64, error) {
@@ -166,9 +154,9 @@ func (s *SitemapIndex) Save() error {
 
 	var filename string
 	if s.Compress {
-		filename = s.Name + FileGzExt
+		filename = s.Name + fileGzExt
 	} else {
-		filename = s.Name + FileExt
+		filename = s.Name + fileExt
 	}
 
 	buf := bytes.Buffer{}
