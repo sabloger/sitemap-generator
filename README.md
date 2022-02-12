@@ -31,7 +31,7 @@ sitemaps with a sitemap_index file.
   - [ ] Alternate Links
 - [ ] Module Stability:
   - [x] Increase test coverage to more than %80.
-  current coverage is: 80.6% of statements
+  current coverage is: 85.5% of statements
   - [ ] Write more test files.
 
 
