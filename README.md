@@ -2,7 +2,8 @@ sitemap-generator
 =================
 
 [![GoDoc](https://godoc.org/github.com/sabloger/sitemap-generator?status.svg)](https://godoc.org/github.com/sabloger/sitemap-generator)
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/sabloger/sitemap-generator)](https://goreportcard.com/report/github.com/sabloger/sitemap-generator)
+[![Build Status](https://travis-ci.org/sabloger/sitemap-generator.svg?branch=main)](https://travis-ci.org/sabloger/sitemap-generator)
 
 A high-performance sitemap-generator Go module which is a comprehensive tool to create
 and manage sitemap_index and sitemap files in a beautiful way. :)
