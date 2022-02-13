@@ -168,7 +168,7 @@ sitemap_index_example
 - [ ] Module Stability:
   - [x] Increase test coverage to more than %80.
   current coverage is: 86.6% of statements
-  - [ ] Write more test files.
+  - [X] Write tests for different usages.
 
 
 ## LINKS
