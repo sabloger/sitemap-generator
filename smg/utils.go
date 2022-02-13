@@ -38,7 +38,7 @@ func writeToFile(filename, path string, compress bool, content ...[]byte) (n int
 			if err != nil {
 				return 0, err
 			}
-			n+=tn
+			n += tn
 		}
 		return
 	}
@@ -48,7 +48,7 @@ func writeToFile(filename, path string, compress bool, content ...[]byte) (n int
 		if err != nil {
 			return 0, err
 		}
-		n+=tn
+		n += tn
 	}
 	return
 }
