@@ -188,5 +188,7 @@ MIT
 
 ## THANKS
 Special thanks to authors of these repos whom I inspired from their sitemap modules to create this awesome module. :)
+
 https://github.com/snabb/sitemap
+
 https://github.com/ikeikeikeike/go-sitemap-generator
