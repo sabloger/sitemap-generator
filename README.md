@@ -1,7 +1,7 @@
 sitemap-generator
 =================
 
-An awesome sitemap-generator Go module which is a comprehensive tool to create
+A high-performance sitemap-generator Go module which is a comprehensive tool to create
 and manage sitemap_index and sitemap files in a beautiful way. :)
 
 Please see http://www.sitemaps.org/ for description of sitemap contents.
@@ -31,11 +31,11 @@ func main() {
   now := time.Now().UTC()
 
   sm := smg.NewSitemap(true) // The argument is PrettyPrint which must be set on initializing
-  sm.SetName("single_sitemap")
+  sm.SetName("single_sitemap") // Optional
   sm.SetHostname("https://www.example.com")
   sm.SetOutputPath("./some/path")
   sm.SetLastMod(&now)
-  sm.SetCompress(false)
+  sm.SetCompress(false) // Default is true
 
   // Adding URL items
   err := sm.Add(&smg.SitemapLoc{
