@@ -8,7 +8,8 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"path/filepath"
+	"net/url"
+	"path"
 	"sync"
 	"time"
 )
@@ -175,7 +176,15 @@ func (s *SitemapIndex) Save() (string, error) {
 		return "", err
 	}
 	_, err = writeToFile(filename, s.OutputPath, s.Compress, buf.Bytes())
-	s.finalURL = filepath.Join(s.Hostname, s.OutputPath, filename)
+	// s.finalURL = filepath.Join(s.Hostname, s.OutputPath, filename)
+
+	output, err := url.Parse(s.Hostname)
+	if err != nil {
+		return "", err
+	}
+	output.Path = path.Join(output.Path, s.OutputPath, filename)
+	s.finalURL = output.String()
+
 	return filename, err
 }
 
@@ -185,11 +194,19 @@ func (s *SitemapIndex) saveSitemaps() error {
 		go func(sm *Sitemap) {
 			smFilenames, err := sm.Save()
 			if err != nil {
-				log.Println("Error while saving this sitemap:", sm.Name)
+				log.Println("Error while saving this sitemap:", sm.Name, err)
 				return
 			}
 			for _, smFilename := range smFilenames {
-				sm.SitemapIndexLoc.Loc = filepath.Join(s.Hostname, s.ServerURI, smFilename)
+				// sm.SitemapIndexLoc.Loc = filepath.Join(s.Hostname, s.ServerURI, smFilename)
+
+				output, err := url.Parse(s.Hostname)
+				if err != nil {
+					log.Println("Error while saving this sitemap:", sm.Name, err)
+					return
+				}
+				output.Path = path.Join(output.Path, s.ServerURI, smFilename)
+				sm.SitemapIndexLoc.Loc = output.String()
 				s.Add(sm.SitemapIndexLoc)
 			}
 			s.wg.Done()
