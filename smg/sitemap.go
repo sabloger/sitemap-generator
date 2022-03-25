@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"path/filepath"
+	"net/url"
+	"path"
 	"time"
 )
 
@@ -87,8 +88,12 @@ func (s *Sitemap) realAdd(u *SitemapLoc, locN int, locBytes []byte) error {
 	}
 
 	if locBytes == nil {
-		u.Loc = filepath.Join(s.Hostname, u.Loc)
-		var err error
+		output, err := url.Parse(s.Hostname)
+		if err != nil {
+			return err
+		}
+		output.Path = path.Join(output.Path, u.Loc)
+		u.Loc = output.String()
 		locN, locBytes, err = s.encodeToXML(u)
 		if err != nil {
 			return err
