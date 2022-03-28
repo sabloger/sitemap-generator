@@ -8,6 +8,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"path"
 	"path/filepath"
 	"sync"
 	"time"
@@ -189,7 +191,13 @@ func (s *SitemapIndex) saveSitemaps() error {
 				return
 			}
 			for _, smFilename := range smFilenames {
-				sm.SitemapIndexLoc.Loc = filepath.Join(s.Hostname, s.ServerURI, smFilename)
+				output, err := url.Parse(s.Hostname)
+				if err != nil {
+					log.Println("Error parsing URL:", s.Hostname)
+					return
+				}
+				output.Path = path.Join(output.Path, s.ServerURI, smFilename)
+				sm.SitemapIndexLoc.Loc = output.String()
 				s.Add(sm.SitemapIndexLoc)
 			}
 			s.wg.Done()
