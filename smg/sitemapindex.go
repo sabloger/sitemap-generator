@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -176,13 +177,7 @@ func (s *SitemapIndex) Save() (string, error) {
 		return "", err
 	}
 	_, err = writeToFile(filename, s.OutputPath, s.Compress, buf.Bytes())
-	output, err := url.Parse(s.Hostname)
-	if err != nil {
-		log.Println("Error parsing URL:", s.Hostname)
-		return "", err
-	}
-	output.Path = path.Join(output.Path, s.OutputPath, filename)
-	s.finalURL = output.String()
+	s.finalURL = filepath.Join(s.Hostname, s.OutputPath, filename)
 	return filename, err
 }
 
