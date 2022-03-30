@@ -1,7 +1,9 @@
 package smg
 
 import (
+	"encoding/xml"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -18,6 +20,17 @@ const (
 var (
 	lenLetters = len(letterBytes)
 )
+
+type SitemapIndexXml struct {
+	XMLName xml.Name `xml:"sitemapindex"`
+	Urls []Urls `xml:"url"`
+}
+
+type Urls struct {
+	XMLName xml.Name `xml:"url"`
+	Loc string `xml:"loc"`
+	LasMod string `xml:"lastmod"`
+}
 
 // TestCompleteAction tests the whole sitemap-generator module with a semi-basic usage
 func TestCompleteAction(t *testing.T) {
@@ -197,6 +210,112 @@ func TestBigSizeSitemap(t *testing.T) {
 
 	// Removing the generated path and files
 	removeTmpFiles(t, path)
+}
+
+// TestSitemapIndexSave tests that on SitemapIndex.Save(), function produces a proper URL path to the sitemap
+func TestSitemapIndexSave(t *testing.T) {
+	path := "./tmp/sitemap_test"
+	testLocation := "/test"
+	testSitemapName := "test_sitemap_1"
+
+	smi := NewSitemapIndex(true)
+	smi.SetCompress(false)
+	smi.SetHostname(baseURL)
+	smi.SetSitemapIndexName("test_sitemap_index")
+	smi.SetOutputPath(path)
+	now := time.Now().UTC()
+
+	sm := smi.NewSitemap()
+	sm.SetName(testSitemapName)
+	sm.SetLastMod(&now)
+
+	err := sm.Add(&SitemapLoc{
+		Loc:        testLocation,
+		LastMod:    &now,
+		ChangeFreq: Always,
+		Priority:   0.4,
+	})
+	if err != nil {
+		t.Fatal("Unable to add SitemapLoc test_sitemap_1: ", err)
+	}
+
+	expectedUrl := fmt.Sprintf("%s/%s.xml", baseURL, testSitemapName)
+	sitemapFilepath, err := smi.Save()
+	if err != nil {
+		t.Fatal("Unable to Save Sitemap:", err)
+	}
+	xmlFile, err := os.Open(fmt.Sprintf("%s/%s",path, sitemapFilepath))
+	if err != nil {
+		t.Fatal("Unable to open file:", err)
+	}
+	defer xmlFile.Close()
+	byteValue, _ := ioutil.ReadAll(xmlFile)
+	var sitemapIndex SitemapIndexXml
+	err = xml.Unmarshal(byteValue, &sitemapIndex)
+	if err != nil {
+		t.Fatal("Unable to unmarhsall sitemap byte array into xml: ", err)
+	}
+	actualUrl := sitemapIndex.Urls[0].Loc
+	if actualUrl != expectedUrl {
+		t.Fatal(fmt.Sprintf("URL Mismatch: \nActual: %s\nExpected: %s", actualUrl, expectedUrl))
+	}
+
+	removeTmpFiles(t, "./tmp")
+
+}
+
+// TestSitemapIndexSaveWithServerURI tests that on SitemapIndex.Save(), function produces a proper URL path to the sitemap
+func TestSitemapIndexSaveWithServerURI(t *testing.T) {
+	path := "./tmp/sitemap_test"
+	testLocation := "/test"
+	testServerURI := "/server/"
+	testSitemapName := "test_sitemap_1"
+
+	smi := NewSitemapIndex(true)
+	smi.SetCompress(false)
+	smi.SetHostname(baseURL)
+	smi.SetSitemapIndexName("test_sitemap_index")
+	smi.SetOutputPath(path)
+	smi.SetServerURI(testServerURI)
+	now := time.Now().UTC()
+
+	sm := smi.NewSitemap()
+	sm.SetName(testSitemapName)
+	sm.SetLastMod(&now)
+
+	err := sm.Add(&SitemapLoc{
+		Loc:        testLocation,
+		LastMod:    &now,
+		ChangeFreq: Always,
+		Priority:   0.4,
+	})
+	if err != nil {
+		t.Fatal("Unable to add SitemapLoc test_sitemap_1: ", err)
+	}
+
+	expectedUrl := fmt.Sprintf("%s%s%s.xml", baseURL, testServerURI, testSitemapName)
+	sitemapFilepath, err := smi.Save()
+	if err != nil {
+		t.Fatal("Unable to Save Sitemap:", err)
+	}
+	xmlFile, err := os.Open(fmt.Sprintf("%s/%s",path, sitemapFilepath))
+	if err != nil {
+		t.Fatal("Unable to open file:", err)
+	}
+	defer xmlFile.Close()
+	byteValue, _ := ioutil.ReadAll(xmlFile)
+	var sitemapIndex SitemapIndexXml
+	err = xml.Unmarshal(byteValue, &sitemapIndex)
+	if err != nil {
+		t.Fatal("Unable to unmarhsall sitemap byte array into xml: ", err)
+	}
+	actualUrl := sitemapIndex.Urls[0].Loc
+	if actualUrl != expectedUrl {
+		t.Fatal(fmt.Sprintf("URL Mismatch: \nActual: %s\nExpected: %s", actualUrl, expectedUrl))
+	}
+
+	removeTmpFiles(t, "./tmp")
+
 }
 
 func assertOutputFile(t *testing.T, path, name string) {
