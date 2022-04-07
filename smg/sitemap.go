@@ -39,11 +39,11 @@ type Sitemap struct {
 	Options
 	SitemapIndexLoc *SitemapIndexLoc
 	NextSitemap     *Sitemap
-	fileNum         int
-	urlsCount       int
-	content         bytes.Buffer
-	tempBuf         *bytes.Buffer
-	xmlEncoder      *xml.Encoder
+	FileNum         int
+	UrlsCount       int
+	Content         bytes.Buffer
+	TempBuf         *bytes.Buffer
+	XmlEncoder      *xml.Encoder
 }
 
 // NewSitemap builds and returns a new Sitemap.
