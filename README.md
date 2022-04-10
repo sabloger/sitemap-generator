@@ -126,6 +126,10 @@ func main() {
     log.Fatal("Unable to Save Sitemap:", err)
   }
 
+  // Pings the Search engines. default Google and Bing, But you can add any other ping URL's
+  // in this format: http://www.google.com/webmasters/tools/ping?sitemap=%s
+  smi.PingSearchEngines()
+
   fmt.Println("sitemap_index file:", filename)
 }
 ```
