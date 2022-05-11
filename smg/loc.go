@@ -16,7 +16,7 @@ type SitemapLoc struct {
 
 // SitemapIndexLoc contains data related to <sitemap> tag in SitemapIndex.
 type SitemapIndexLoc struct {
-	XMLName xml.Name   `xml:"url"`
+	XMLName xml.Name   `xml:"sitemap"`
 	Loc     string     `xml:"loc"`
 	LastMod *time.Time `xml:"lastmod,omitempty"`
 }
