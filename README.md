@@ -144,14 +144,14 @@ sitemap_index_example
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
+  <sitemap>
     <loc>https:/www.example.com/sitemaps/blog_sitemap.xml</loc>
     <lastmod>2022-02-12T18:38:06.671183Z</lastmod>
-  </url>
-  <url>
+  </sitemap>
+  <sitemap>
     <loc>https:/www.example.com/sitemaps/sitemap2.xml</loc>
     <lastmod>2022-02-12T18:38:06.671183Z</lastmod>
-  </url>
+  </sitemap>
 </sitemapindex>
 ```
 
