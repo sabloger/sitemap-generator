@@ -161,7 +161,7 @@ It is possible to write the `Sitemap` content into a custom output using this me
 
 ```go
 
-// Finalize must be culled to make the content closed.
+// Finalize must be called to make the content closed.
 sm.Finalize()
 
 // Needs an io.Writer interface
