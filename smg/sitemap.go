@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"net/url"
 	"path"
 	"time"
@@ -44,6 +45,7 @@ type Sitemap struct {
 	content         bytes.Buffer
 	tempBuf         *bytes.Buffer
 	xmlEncoder      *xml.Encoder
+	isFinalized     bool
 }
 
 // NewSitemap builds and returns a new Sitemap.
@@ -61,6 +63,7 @@ func NewSitemap(prettyPrint bool) *Sitemap {
 	s.content.Write([]byte(xml.Header))
 	s.content.Write([]byte(xmlUrlsetOpenTag))
 	s.tempBuf = &bytes.Buffer{}
+	s.Name = "sitemap"
 	s.xmlEncoder = xml.NewEncoder(s.tempBuf)
 	if prettyPrint {
 		s.content.Write([]byte{'\n'})
@@ -73,6 +76,9 @@ func NewSitemap(prettyPrint bool) *Sitemap {
 // in case of exceeding the Sitemaps.org limits, splits the Sitemap
 // into several Sitemap instances using a Linked List
 func (s *Sitemap) Add(u *SitemapLoc) error {
+	if s.isFinalized {
+		return fmt.Errorf("sitemap is finalized")
+	}
 	return s.realAdd(u, 0, nil)
 }
 
@@ -186,6 +192,16 @@ func (s *Sitemap) GetURLsCount() int {
 	return s.urlsCount
 }
 
+// Finalize closes the XML data set and do not allow any further sm.Add() calls
+func (s *Sitemap) Finalize() {
+	if s.prettyPrint {
+		s.content.Write([]byte{'\n'})
+	}
+	s.content.Write([]byte(xmlUrlsetCloseTag))
+
+	s.isFinalized = true
+}
+
 // Save makes the OutputPath in case of absence and saves the Sitemap into OutputPath using it's Name.
 // it returns the filename.
 func (s *Sitemap) Save() (filenames []string, err error) {
@@ -208,13 +224,14 @@ func (s *Sitemap) Save() (filenames []string, err error) {
 		filename += fileExt
 	}
 
-	ending := bytes.Buffer{}
-	if s.prettyPrint {
-		ending.Write([]byte{'\n'})
+	if !s.isFinalized {
+		s.Finalize()
 	}
-	ending.Write([]byte(xmlUrlsetCloseTag))
 
-	_, err = writeToFile(filename, s.OutputPath, s.Compress, s.content.Bytes(), ending.Bytes())
+	_, err = writeToFile(filename, s.OutputPath, s.Compress, s.content.Bytes())
+	if err != nil {
+		return
+	}
 
 	if s.NextSitemap != nil {
 		filenames, err = s.NextSitemap.Save()
@@ -223,4 +240,8 @@ func (s *Sitemap) Save() (filenames []string, err error) {
 		}
 	}
 	return append(filenames, filename), nil
+}
+
+func (s *Sitemap) WriteTo(w io.Writer) (n int64, err error) {
+	return s.content.WriteTo(w)
 }
