@@ -155,6 +155,19 @@ sitemap_index_example
 </sitemapindex>
 ```
 
+
+### Custom output buffer for Sitemap files
+It is possible to write the `Sitemap` content into a custom output using this method:
+
+```go
+
+// Finalize must be culled to make the content closed.
+sm.Finalize()
+
+buf := bytes.Buffer{}
+n, err = sm.WriteTo(&buf)
+```
+
 ## TODO list
 - [x] Develop: add new functionalities:
   - [x] Write the sitemap_index and sitemap files in xml format
@@ -166,6 +179,8 @@ sitemap_index_example
   - [x] Ping search engines for sitemap_index
   - [ ] Ping search engines for single sitemap
   - [ ] Break the sitemap_index xml file in case of exceeding
+  - [x] Implement Sitemap.WriteTo for custom outputs.
+  - [ ] Implement SitemapIndex.WriteTo for custom outputs.
     the sitemaps.org limits (50,000 urls OR 50MB uncompressed file)
 - [ ] Support: Additional content types:
   - [ ] Video sitemaps
@@ -175,7 +190,7 @@ sitemap_index_example
 - [ ] Module Stability:
   - [x] Increase test coverage to more than %80.
   current coverage is: 86.6% of statements
-  - [X] Write tests for different usages.
+  - [x] Write tests for different usages.
 
 
 ## LINKS
