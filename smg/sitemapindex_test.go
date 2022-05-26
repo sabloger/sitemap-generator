@@ -23,19 +23,19 @@ var (
 
 type SitemapIndexXml struct {
 	XMLName xml.Name `xml:"sitemapindex"`
-	Urls []Urls `xml:"url"`
+	Urls    []Urls   `xml:"url"`
 }
 
 type Urls struct {
 	XMLName xml.Name `xml:"url"`
-	Loc string `xml:"loc"`
-	LasMod string `xml:"lastmod"`
+	Loc     string   `xml:"loc"`
+	LasMod  string   `xml:"lastmod"`
 }
 
 // TestCompleteAction tests the whole sitemap-generator module with a semi-basic usage
 func TestCompleteAction(t *testing.T) {
 	routes := buildRoutes(10, 40, 10)
-	path := getNewPath()
+	path := t.TempDir()
 
 	smi := NewSitemapIndex(true)
 	smi.SetCompress(false)
@@ -117,15 +117,11 @@ func TestCompleteAction(t *testing.T) {
 	assertOutputFile(t, path, "sitemap6"+fileGzExt)
 	// Plain files:
 	assertOutputFile(t, path, "sitemap6"+fileExt)
-	// -----------------------------------------------------------------
-
-	// Removing the generated path and files
-	removeTmpFiles(t, path)
 }
 
 // TestLargeURLSetSitemap tests another one with 100001 items to be split to three files
 func TestLargeURLSetSitemap(t *testing.T) {
-	path := getNewPath()
+	path := t.TempDir()
 
 	smi := NewSitemapIndex(true)
 	smi.SetCompress(false)
@@ -164,16 +160,12 @@ func TestLargeURLSetSitemap(t *testing.T) {
 	assertOutputFile(t, path, "large1"+fileExt)
 	//  file no. 3:
 	assertOutputFile(t, path, "large2"+fileExt)
-	// -----------------------------------------------------------------
-
-	// Removing the generated path and files
-	removeTmpFiles(t, path)
 }
 
 // TestBigSizeSitemap test another one with long urls which makes file bigger than 50MG
 // it must be split to two files
 func TestBigSizeSitemap(t *testing.T) {
-	path := getNewPath()
+	path := t.TempDir()
 
 	smi := NewSitemapIndex(true)
 	smi.SetCompress(false)
@@ -206,10 +198,6 @@ func TestBigSizeSitemap(t *testing.T) {
 	assertOutputFile(t, path, "big"+fileExt)
 	// no. 2:
 	assertOutputFile(t, path, "big1"+fileExt)
-	// -----------------------------------------------------------------
-
-	// Removing the generated path and files
-	removeTmpFiles(t, path)
 }
 
 // TestSitemapIndexSave tests that on SitemapIndex.Save(), function produces a proper URL path to the sitemap
@@ -244,7 +232,7 @@ func TestSitemapIndexSave(t *testing.T) {
 	if err != nil {
 		t.Fatal("Unable to Save Sitemap:", err)
 	}
-	xmlFile, err := os.Open(fmt.Sprintf("%s/%s",path, sitemapFilepath))
+	xmlFile, err := os.Open(fmt.Sprintf("%s/%s", path, sitemapFilepath))
 	if err != nil {
 		t.Fatal("Unable to open file:", err)
 	}
@@ -259,9 +247,6 @@ func TestSitemapIndexSave(t *testing.T) {
 	if actualUrl != expectedUrl {
 		t.Fatal(fmt.Sprintf("URL Mismatch: \nActual: %s\nExpected: %s", actualUrl, expectedUrl))
 	}
-
-	removeTmpFiles(t, "./tmp")
-
 }
 
 // TestSitemapIndexSaveWithServerURI tests that on SitemapIndex.Save(), function produces a proper URL path to the sitemap
@@ -298,7 +283,7 @@ func TestSitemapIndexSaveWithServerURI(t *testing.T) {
 	if err != nil {
 		t.Fatal("Unable to Save Sitemap:", err)
 	}
-	xmlFile, err := os.Open(fmt.Sprintf("%s/%s",path, sitemapFilepath))
+	xmlFile, err := os.Open(fmt.Sprintf("%s/%s", path, sitemapFilepath))
 	if err != nil {
 		t.Fatal("Unable to open file:", err)
 	}
@@ -313,9 +298,6 @@ func TestSitemapIndexSaveWithServerURI(t *testing.T) {
 	if actualUrl != expectedUrl {
 		t.Fatal(fmt.Sprintf("URL Mismatch: \nActual: %s\nExpected: %s", actualUrl, expectedUrl))
 	}
-
-	removeTmpFiles(t, "./tmp")
-
 }
 
 func assertOutputFile(t *testing.T, path, name string) {
@@ -336,13 +318,6 @@ func assertURLsCount(t *testing.T, sm *Sitemap) {
 	}
 }
 
-func removeTmpFiles(t *testing.T, path string) {
-	err := os.RemoveAll(path)
-	if err != nil {
-		t.Fatal("Unable to remove tmp path after testing:", err)
-	}
-}
-
 func buildRoutes(n, l, s int) []string {
 	rand.Seed(time.Now().UnixNano())
 
@@ -359,8 +334,4 @@ func randString(n int) string {
 		b[i] = letterBytes[rand.Intn(lenLetters)]
 	}
 	return string(b)
-}
-
-func getNewPath() string {
-	return fmt.Sprintf("/tmp/sitemap_output_%d", rand.Intn(900)+100)
 }
