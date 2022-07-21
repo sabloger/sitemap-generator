@@ -206,8 +206,10 @@ func (s *SitemapIndex) saveSitemaps() error {
 					return
 				}
 				output.Path = path.Join(output.Path, s.ServerURI, smFilename)
-				sm.SitemapIndexLoc.Loc = output.String()
-				s.Add(sm.SitemapIndexLoc)
+				smIndexLoc := &SitemapIndexLoc{
+					Loc: output.String(),
+				}
+				s.Add(smIndexLoc)
 			}
 			s.wg.Done()
 		}(sitemap)
