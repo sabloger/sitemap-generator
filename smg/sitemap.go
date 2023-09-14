@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"path"
 	"time"
 )
 
@@ -98,8 +97,11 @@ func (s *Sitemap) realAdd(u *SitemapLoc, locN int, locBytes []byte) error {
 		if err != nil {
 			return err
 		}
-		output.Path = path.Join(output.Path, u.Loc)
-		u.Loc = output.String()
+		loc, err := url.Parse(u.Loc)
+		if err != nil {
+			return err
+		}
+		u.Loc = output.ResolveReference(loc).String()
 		locN, locBytes, err = s.encodeToXML(u)
 		if err != nil {
 			return err

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 	"time"
@@ -74,7 +74,7 @@ func TestSingleSitemap(t *testing.T) {
 // TestSitemapAdd tests that the Add function produces a proper URL
 func TestSitemapAdd(t *testing.T) {
 	path := t.TempDir()
-	testLocation := "/test"
+	testLocation := "/test?foo=bar"
 	now := time.Now().UTC()
 
 	sm := NewSitemap(true)
@@ -104,7 +104,7 @@ func TestSitemapAdd(t *testing.T) {
 		t.Fatal("Unable to open file:", err)
 	}
 	defer xmlFile.Close()
-	byteValue, _ := ioutil.ReadAll(xmlFile)
+	byteValue, _ := io.ReadAll(xmlFile)
 	var urlSet UrlSet
 	err = xml.Unmarshal(byteValue, &urlSet)
 	if err != nil {
@@ -117,7 +117,7 @@ func TestSitemapAdd(t *testing.T) {
 func TestWriteTo(t *testing.T) {
 	path := t.TempDir()
 	now := time.Now().UTC()
-	testLocation := "/test"
+	testLocation := "/test/"
 
 	sm := NewSitemap(true)
 	sm.SetHostname(baseURL)
