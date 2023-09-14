@@ -3,7 +3,7 @@ package smg
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -23,11 +23,10 @@ var (
 
 type SitemapIndexXml struct {
 	XMLName xml.Name `xml:"sitemapindex"`
-	Urls    []Urls   `xml:"url"`
+	Sitemaps    []Loc   `xml:"sitemap"`
 }
 
-type Urls struct {
-	XMLName xml.Name `xml:"url"`
+type Loc struct {
 	Loc     string   `xml:"loc"`
 	LasMod  string   `xml:"lastmod"`
 }
@@ -237,13 +236,13 @@ func TestSitemapIndexSave(t *testing.T) {
 		t.Fatal("Unable to open file:", err)
 	}
 	defer xmlFile.Close()
-	byteValue, _ := ioutil.ReadAll(xmlFile)
+	byteValue, _ := io.ReadAll(xmlFile)
 	var sitemapIndex SitemapIndexXml
 	err = xml.Unmarshal(byteValue, &sitemapIndex)
 	if err != nil {
 		t.Fatal("Unable to unmarhsall sitemap byte array into xml: ", err)
 	}
-	actualUrl := sitemapIndex.Urls[0].Loc
+	actualUrl := sitemapIndex.Sitemaps[0].Loc
 	if actualUrl != expectedUrl {
 		t.Fatal(fmt.Sprintf("URL Mismatch: \nActual: %s\nExpected: %s", actualUrl, expectedUrl))
 	}
@@ -288,13 +287,13 @@ func TestSitemapIndexSaveWithServerURI(t *testing.T) {
 		t.Fatal("Unable to open file:", err)
 	}
 	defer xmlFile.Close()
-	byteValue, _ := ioutil.ReadAll(xmlFile)
+	byteValue, _ := io.ReadAll(xmlFile)
 	var sitemapIndex SitemapIndexXml
 	err = xml.Unmarshal(byteValue, &sitemapIndex)
 	if err != nil {
 		t.Fatal("Unable to unmarhsall sitemap byte array into xml: ", err)
 	}
-	actualUrl := sitemapIndex.Urls[0].Loc
+	actualUrl := sitemapIndex.Sitemaps[0].Loc
 	if actualUrl != expectedUrl {
 		t.Fatal(fmt.Sprintf("URL Mismatch: \nActual: %s\nExpected: %s", actualUrl, expectedUrl))
 	}
