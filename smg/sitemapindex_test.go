@@ -22,13 +22,13 @@ var (
 )
 
 type SitemapIndexXml struct {
-	XMLName xml.Name `xml:"sitemapindex"`
-	Sitemaps    []Loc   `xml:"sitemap"`
+	XMLName  xml.Name `xml:"sitemapindex"`
+	Sitemaps []Loc    `xml:"sitemap"`
 }
 
 type Loc struct {
-	Loc     string   `xml:"loc"`
-	LasMod  string   `xml:"lastmod"`
+	Loc    string `xml:"loc"`
+	LasMod string `xml:"lastmod"`
 }
 
 // TestCompleteAction tests the whole sitemap-generator module with a semi-basic usage
@@ -159,6 +159,52 @@ func TestLargeURLSetSitemap(t *testing.T) {
 	assertOutputFile(t, path, "large1"+fileExt)
 	//  file no. 3:
 	assertOutputFile(t, path, "large2"+fileExt)
+}
+
+// TestLargeURLSetSitemap tests another one with 100001 items to be split to five files max 25k each
+func TestLargeURLSetSitemapMax25kEach(t *testing.T) {
+	path := t.TempDir()
+
+	smi := NewSitemapIndex(true)
+	smi.SetCompress(false)
+	smi.SetHostname(baseURL)
+	smi.SetOutputPath(path)
+	now := time.Now().UTC()
+
+	smLarge := smi.NewSitemap()
+	smLarge.SetName("l25kmax")
+	smLarge.SetMaxURLsCount(25000) // each sitemap should have 25k url's max
+	moreRoutes := buildRoutes(100001, 40, 10)
+	for _, route := range moreRoutes {
+		err := smLarge.Add(&SitemapLoc{
+			Loc:        route,
+			LastMod:    &now,
+			ChangeFreq: Hourly,
+			Priority:   1,
+		})
+		if err != nil {
+			t.Fatal("Unable to add large SitemapLoc:", err)
+		}
+	}
+	assertURLsCount(t, smLarge)
+
+	indexFilename, err := smi.Save()
+	if err != nil {
+		t.Fatal("Unable to Save SitemapIndex:", err)
+	}
+
+	assertOutputFile(t, path, indexFilename)
+
+	// Checking the larger sitemap which was no-name, file no. 1:
+	assertOutputFile(t, path, "l25kmax"+fileExt)
+	//  file no. 2:
+	assertOutputFile(t, path, "l25kmax"+fileExt)
+	//  file no. 3:
+	assertOutputFile(t, path, "l25kmax"+fileExt)
+	//  file no. 4:
+	assertOutputFile(t, path, "l25kmax"+fileExt)
+	//  file no. 5:
+	assertOutputFile(t, path, "l25kmax"+fileExt)
 }
 
 // TestBigSizeSitemap test another one with long urls which makes file bigger than 50MG
@@ -312,7 +358,7 @@ func assertOutputFile(t *testing.T, path, name string) {
 }
 
 func assertURLsCount(t *testing.T, sm *Sitemap) {
-	if sm.GetURLsCount() > maxURLsCount {
+	if sm.GetURLsCount() > sm.maxURLsCount {
 		t.Fatal("URLsCount is more than limits:", sm.Name, sm.GetURLsCount())
 	}
 }

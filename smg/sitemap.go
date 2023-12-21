@@ -24,12 +24,12 @@ const (
 )
 
 const (
-	fileExt           string = ".xml"
-	fileGzExt         string = ".xml.gz"
-	maxFileSize       int    = 52428000 // decreased 800 byte to prevent a small bug to fail a big program :)
-	maxURLsCount      int    = 50000
-	xmlUrlsetOpenTag  string = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`
-	xmlUrlsetCloseTag string = "</urlset>\n"
+	fileExt             string = ".xml"
+	fileGzExt           string = ".xml.gz"
+	maxFileSize         int    = 52428000 // decreased 800 byte to prevent a small bug to fail a big program :)
+	defaultMaxURLsCount int    = 50000
+	xmlUrlsetOpenTag    string = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`
+	xmlUrlsetCloseTag   string = "</urlset>\n"
 )
 
 // Sitemap struct which contains Options for general attributes,
@@ -39,6 +39,7 @@ type Sitemap struct {
 	Options
 	SitemapIndexLoc *SitemapIndexLoc
 	NextSitemap     *Sitemap
+	maxURLsCount    int
 	fileNum         int
 	urlsCount       int
 	content         bytes.Buffer
@@ -63,6 +64,7 @@ func NewSitemap(prettyPrint bool) *Sitemap {
 	s.content.Write([]byte(xmlUrlsetOpenTag))
 	s.tempBuf = &bytes.Buffer{}
 	s.Name = "sitemap"
+	s.maxURLsCount = defaultMaxURLsCount
 	s.xmlEncoder = xml.NewEncoder(s.tempBuf)
 	if prettyPrint {
 		s.content.Write([]byte{'\n'})
@@ -87,7 +89,7 @@ func (s *Sitemap) realAdd(u *SitemapLoc, locN int, locBytes []byte) error {
 		return nil
 	}
 
-	if s.urlsCount >= maxURLsCount {
+	if s.urlsCount >= s.maxURLsCount {
 		s.buildNextSitemap()
 		return s.NextSitemap.realAdd(u, locN, locBytes)
 	}
@@ -129,6 +131,7 @@ func (s *Sitemap) buildNextSitemap() {
 	s.NextSitemap.Name = s.Name
 	s.NextSitemap.Hostname = s.Hostname
 	s.NextSitemap.OutputPath = s.OutputPath
+	s.NextSitemap.maxURLsCount = s.maxURLsCount
 	s.NextSitemap.fileNum = s.fileNum + 1
 }
 
@@ -187,6 +190,11 @@ func (s *Sitemap) SetCompress(compress bool) {
 	if s.NextSitemap != nil {
 		s.NextSitemap.SetCompress(compress)
 	}
+}
+
+// SetMaxURLsCount sets the maximum # of URLs for a sitemap
+func (s *Sitemap) SetMaxURLsCount(maxURLsCount int) {
+	s.maxURLsCount = maxURLsCount
 }
 
 // GetURLsCount returns the number of added URL items into this single sitemap.
