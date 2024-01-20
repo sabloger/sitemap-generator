@@ -18,11 +18,12 @@ type UrlSet struct {
 }
 
 type UrlData struct {
-	XMLName    xml.Name `xml:"url"`
-	Loc        string   `xml:"loc"`
-	LasMod     string   `xml:"lastmod"`
-	ChangeFreq string   `xml:"changefreq"`
-	Priority   string   `xml:"priority"`
+	XMLName    xml.Name       `xml:"url"`
+	Loc        string         `xml:"loc"`
+	LasMod     string         `xml:"lastmod"`
+	ChangeFreq string         `xml:"changefreq"`
+	Priority   string         `xml:"priority"`
+	Images     []SitemapImage `xml:"image:image"`
 }
 
 // TestSingleSitemap tests the module against Single-file sitemap usage format.
@@ -44,6 +45,7 @@ func TestSingleSitemap(t *testing.T) {
 			LastMod:    &now,
 			ChangeFreq: Always,
 			Priority:   0.4,
+			Images:     []*SitemapImage{{"path-to-image.jpg"}},
 		})
 		if err != nil {
 			t.Fatal("Unable to add SitemapLoc:", err)
@@ -89,6 +91,7 @@ func TestSitemapAdd(t *testing.T) {
 		LastMod:    &now,
 		ChangeFreq: Always,
 		Priority:   0.4,
+		Images:     []*SitemapImage{{"path-to-image.jpg"}},
 	})
 	if err != nil {
 		t.Fatal("Unable to add SitemapLoc:", err)
@@ -130,6 +133,7 @@ func TestWriteTo(t *testing.T) {
 		LastMod:    &now,
 		ChangeFreq: Always,
 		Priority:   0.4,
+		Images:     []*SitemapImage{{"path-to-image.jpg"}},
 	})
 	if err != nil {
 		t.Fatal("Unable to add SitemapLoc:", err)
