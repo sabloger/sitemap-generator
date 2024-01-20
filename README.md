@@ -39,6 +39,7 @@ func main() {
   sm.SetOutputPath("./some/path")
   sm.SetLastMod(&now)
   sm.SetCompress(false) // Default is true
+  sm.SetMaxURLsCount(25000) // Default maximum number of URLs in each file is 50,000 to break
 
   // Adding URL items
   err := sm.Add(&smg.SitemapLoc{
@@ -46,6 +47,7 @@ func main() {
     LastMod:    &now,
     ChangeFreq: smg.Always,
     Priority:   0.4,
+		Images:     []*SitemapImage{{"/path-to-image.jpg"}, {"/path-to-image-2.jpg"}},
   })
   if err != nil {
     log.Fatal("Unable to add SitemapLoc:", err)
@@ -66,10 +68,16 @@ func main() {
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
-  <loc>https:/www.example.com/some/uri.html</loc>
+  <loc>https://www.example.com/some/uri.html</loc>
   <lastmod>2022-02-12T16:29:46.45013Z</lastmod>
   <changefreq>always</changefreq>
   <priority>0.4</priority>
+  <image:image>
+    <image:loc>https://www.example.com/path-to-image.jpg</image:loc>
+  </image:image>
+  <image:image>
+    <image:loc>https://www.example.com/path-to-image-2.jpg</image:loc>
+  </image:image>
 </url>
 </urlset>
 ```
@@ -175,22 +183,20 @@ n, err = sm.WriteTo(&buf)
   - [x] Compress option
   - [x] Break the sitemap xml file in case of exceeding 
     the sitemaps.org limits (50,000 urls OR 50MB uncompressed file)
-  - [x] Ability to set Sitemap uri on server to set on it's url
-    in sitemap_index file
+  - [x] Ability to set Sitemap uri on server to set on it's url in sitemap_index file
   - [x] Ping search engines for sitemap_index
   - [ ] Ping search engines for single sitemap
-  - [ ] Break the sitemap_index xml file in case of exceeding
+  - [ ] Break the sitemap_index xml file in case of exceeding the sitemaps.org limits (50,000 urls OR 50MB uncompressed file)
   - [x] Implement Sitemap.WriteTo for custom outputs.
   - [ ] Implement SitemapIndex.WriteTo for custom outputs.
-    the sitemaps.org limits (50,000 urls OR 50MB uncompressed file)
+  - [x] Ability to change maximum URLs number for each file.
 - [ ] Support: Additional content types:
   - [ ] Video sitemaps
-  - [ ] Image sitemaps
+  - [x] Image sitemaps
   - [ ] News sitemaps
   - [ ] Alternate Links
 - [ ] Module Stability:
-  - [x] Increase test coverage to more than %80.
-  current coverage is: 86.6% of statements
+  - [x] Increase test coverage to more than %80. current coverage is: 86.3% of statements
   - [x] Write tests for different usages.
 
 

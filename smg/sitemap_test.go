@@ -82,6 +82,7 @@ func TestSitemapAdd(t *testing.T) {
 	path := t.TempDir()
 	testLocation := "/test?foo=bar"
 	testImage := "/path-to-image.jpg"
+	testImage2 := "/path-to-image-2.jpg"
 	now := time.Now().UTC()
 
 	sm := NewSitemap(true)
@@ -96,13 +97,14 @@ func TestSitemapAdd(t *testing.T) {
 		LastMod:    &now,
 		ChangeFreq: Always,
 		Priority:   0.4,
-		Images:     []*SitemapImage{{testImage}},
+		Images:     []*SitemapImage{{testImage}, {testImage2}},
 	})
 	if err != nil {
 		t.Fatal("Unable to add SitemapLoc:", err)
 	}
 	expectedUrl := fmt.Sprintf("%s%s", baseURL, testLocation)
 	expectedImage := fmt.Sprintf("%s%s", baseURL, testImage)
+	expectedImage2 := fmt.Sprintf("%s%s", baseURL, testImage2)
 	filepath, err := sm.Save()
 	if err != nil {
 		t.Fatal("Unable to Save Sitemap:", err)
@@ -124,6 +126,9 @@ func TestSitemapAdd(t *testing.T) {
 
 	actualImage := urlSet.Urls[0].Images[0].ImageLoc
 	assert.Equal(t, expectedImage, actualImage)
+
+	actualImage2 := urlSet.Urls[0].Images[1].ImageLoc
+	assert.Equal(t, expectedImage2, actualImage2)
 }
 
 func TestWriteTo(t *testing.T) {
