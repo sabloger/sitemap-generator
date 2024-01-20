@@ -23,7 +23,11 @@ type UrlData struct {
 	LasMod     string         `xml:"lastmod"`
 	ChangeFreq string         `xml:"changefreq"`
 	Priority   string         `xml:"priority"`
-	Images     []SitemapImage `xml:"image:image"`
+	Images     []SitemapImageData `xml:"image"`
+}
+
+type SitemapImageData struct {
+	ImageLoc string `xml:"loc,omitempty"`
 }
 
 // TestSingleSitemap tests the module against Single-file sitemap usage format.
@@ -77,6 +81,7 @@ func TestSingleSitemap(t *testing.T) {
 func TestSitemapAdd(t *testing.T) {
 	path := t.TempDir()
 	testLocation := "/test?foo=bar"
+	testImage := "/path-to-image.jpg"
 	now := time.Now().UTC()
 
 	sm := NewSitemap(true)
@@ -91,12 +96,13 @@ func TestSitemapAdd(t *testing.T) {
 		LastMod:    &now,
 		ChangeFreq: Always,
 		Priority:   0.4,
-		Images:     []*SitemapImage{{"path-to-image.jpg"}},
+		Images:     []*SitemapImage{{testImage}},
 	})
 	if err != nil {
 		t.Fatal("Unable to add SitemapLoc:", err)
 	}
 	expectedUrl := fmt.Sprintf("%s%s", baseURL, testLocation)
+	expectedImage := fmt.Sprintf("%s%s", baseURL, testImage)
 	filepath, err := sm.Save()
 	if err != nil {
 		t.Fatal("Unable to Save Sitemap:", err)
@@ -115,6 +121,9 @@ func TestSitemapAdd(t *testing.T) {
 	}
 	actualUrl := urlSet.Urls[0].Loc
 	assert.Equal(t, expectedUrl, actualUrl)
+
+	actualImage := urlSet.Urls[0].Images[0].ImageLoc
+	assert.Equal(t, expectedImage, actualImage)
 }
 
 func TestWriteTo(t *testing.T) {

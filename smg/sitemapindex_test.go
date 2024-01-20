@@ -364,8 +364,6 @@ func assertURLsCount(t *testing.T, sm *Sitemap) {
 }
 
 func buildRoutes(n, l, s int) []string {
-	rand.Seed(time.Now().UnixNano())
-
 	routes := make([]string, n)
 	for i := range routes {
 		routes[i] = randString(rand.Intn(l) + s)
