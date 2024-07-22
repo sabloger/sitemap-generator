@@ -194,7 +194,7 @@ n, err = sm.WriteTo(&buf)
   - [ ] Video sitemaps
   - [x] Image sitemaps
   - [ ] News sitemaps
-  - [ ] Alternate Links
+  - [x] Alternate Links
 - [ ] Module Stability:
   - [x] Increase test coverage to more than %80. current coverage is: 86.3% of statements
   - [x] Write tests for different usages.

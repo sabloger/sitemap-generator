@@ -18,16 +18,23 @@ type UrlSet struct {
 }
 
 type UrlData struct {
-	XMLName    xml.Name       `xml:"url"`
-	Loc        string         `xml:"loc"`
-	LasMod     string         `xml:"lastmod"`
-	ChangeFreq string         `xml:"changefreq"`
-	Priority   string         `xml:"priority"`
-	Images     []SitemapImageData `xml:"image"`
+	XMLName    xml.Name               `xml:"url"`
+	Loc        string                 `xml:"loc"`
+	LasMod     string                 `xml:"lastmod"`
+	ChangeFreq string                 `xml:"changefreq"`
+	Priority   string                 `xml:"priority"`
+	Images     []SitemapImageData     `xml:"image"`
+	Alternate  []SitemapAlternateData `xml:"xhtml link"`
 }
 
 type SitemapImageData struct {
 	ImageLoc string `xml:"loc,omitempty"`
+}
+
+type SitemapAlternateData struct {
+	Hreflang string `xml:"hreflang,attr"`
+	Href     string `xml:"href,attr"`
+	Rel      string `xml:"rel,attr"`
 }
 
 // TestSingleSitemap tests the module against Single-file sitemap usage format.
@@ -83,6 +90,16 @@ func TestSitemapAdd(t *testing.T) {
 	testLocation := "/test?foo=bar"
 	testImage := "/path-to-image.jpg"
 	testImage2 := "/path-to-image-2.jpg"
+	testAlternate1 := &SitemapAlternateLoc{
+		Hreflang: "en",
+		Href:     fmt.Sprintf("%s%s", baseURL, "/en/test"),
+		Rel:      "alternate",
+	}
+	testAlternate2 := &SitemapAlternateLoc{
+		Hreflang: "de",
+		Href:     fmt.Sprintf("%s%s", baseURL, "/de/test"),
+		Rel:      "alternate",
+	}
 	now := time.Now().UTC()
 
 	sm := NewSitemap(true)
@@ -98,6 +115,7 @@ func TestSitemapAdd(t *testing.T) {
 		ChangeFreq: Always,
 		Priority:   0.4,
 		Images:     []*SitemapImage{{testImage}, {testImage2}},
+		Alternate:  []*SitemapAlternateLoc{testAlternate1, testAlternate2},
 	})
 	if err != nil {
 		t.Fatal("Unable to add SitemapLoc:", err)
@@ -129,6 +147,17 @@ func TestSitemapAdd(t *testing.T) {
 
 	actualImage2 := urlSet.Urls[0].Images[1].ImageLoc
 	assert.Equal(t, expectedImage2, actualImage2)
+
+	for i, expAlter := range []*SitemapAlternateLoc{testAlternate1, testAlternate2} {
+		actualAlternate := urlSet.Urls[0].Alternate[i].Href
+		assert.Equal(t, expAlter.Href, actualAlternate)
+
+		actualAlternate = urlSet.Urls[0].Alternate[i].Rel
+		assert.Equal(t, expAlter.Rel, actualAlternate)
+
+		actualAlternate = urlSet.Urls[0].Alternate[i].Hreflang
+		assert.Equal(t, expAlter.Hreflang, actualAlternate)
+	}
 }
 
 func TestWriteTo(t *testing.T) {
