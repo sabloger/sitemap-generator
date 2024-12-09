@@ -47,7 +47,7 @@ func main() {
     LastMod:    &now,
     ChangeFreq: smg.Always,
     Priority:   0.4,
-		Images:     []*SitemapImage{{"/path-to-image.jpg"}, {"/path-to-image-2.jpg"}},
+		Images:     []*smg.SitemapImage{{"/path-to-image.jpg"}, {"/path-to-image-2.jpg"}},
   })
   if err != nil {
     log.Fatal("Unable to add SitemapLoc:", err)
